@@ -57,9 +57,9 @@ function renderChrome() {
       <div>울산광역시 동구 · 광선교회 · 052-235-5004</div>
     </div></div>
     <header class="site-header"><div class="container header-inner">
-      <a href="index.html" class="brand" aria-label="광선교회 홈">
-        <span class="brand-mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3V21M7 8H17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>
-        <span class="brand-copy"><small>KWANGSUN BAPTIST CHURCH</small><strong>광선교회</strong></span>
+      <a href="index.html" class="brand" aria-label="광선침례교회 홈">
+        <img class="brand-logo" src="img/icon-192.png" alt="광선침례교회 로고" width="46" height="46">
+        <span class="brand-copy"><small>KWANGSUN BAPTIST CHURCH</small><strong>광선침례교회</strong></span>
       </a>
       <nav class="nav" id="mainNav">${Nav.map(n => n.children
         ? `<div class="nav-dd"><a href="#" class="nav-dd-top">${n.label} <span class="caret">▾</span></a>
