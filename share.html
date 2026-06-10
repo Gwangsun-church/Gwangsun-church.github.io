@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>은혜나누기 — 광선교회</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="site-top"></div>
+  <div class="page-head"><div class="container">
+    <div class="crumbs">홈 · 성도의 교제 · 은혜나누기</div>
+    <h1>은혜나누기</h1>
+    <p>나눔과 소통, 기도 제목을 함께 나누는 공간입니다. 사진도 함께 올릴 수 있어요. 구글 계정으로 간편하게 로그인하고 글을 남기세요.</p>
+  </div></div>
+
+  <section class="block"><div class="container">
+    <div class="toolbar">
+      <div class="muted" id="count"></div>
+      <button class="btn btn-primary btn-sm" id="newBtn">＋ 글쓰기</button>
+    </div>
+    <div class="post-list" id="list"><div class="empty">불러오는 중…</div></div>
+  </div></section>
+
+  <div id="site-foot"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/board.js"></script>
+  <script>
+    let openWrite, openDetail;
+    async function load() {
+      const list = await loadPosts('free');
+      document.getElementById('count').textContent = `총 ${list.length}개`;
+      const el = document.getElementById('list');
+      if (!list.length) { el.innerHTML = `<div class="empty">아직 게시글이 없습니다. 첫 글을 남겨보세요!</div>`; return; }
+      el.innerHTML = list.map(p => `
+        <div class="post-row" data-id="${p.id}" style="cursor:pointer;">
+          <div class="pt">${esc(p.title)}${(p.images || []).length ? ' 📷' : ''}</div>
+          <div class="meta">${esc(p.authorName)} · ${fmtDate(p.createdAt).slice(5)}</div>
+          <div class="meta views">조회 ${p.views || 0}</div>
+        </div>`).join('');
+      el.querySelectorAll('[data-id]').forEach(r => r.onclick = () => openDetail(r.dataset.id));
+    }
+    onUserReady(() => {
+      openWrite = setupWrite('free', load);
+      openDetail = setupDetail(load);
+      document.getElementById('newBtn').onclick = openWrite;
+      load();
+    });
+  </script>
+</body>
+</html>

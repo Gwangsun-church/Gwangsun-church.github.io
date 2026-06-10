@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인 — 광선교회</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="site-top"></div>
+  <section class="block">
+    <div class="container" style="max-width:440px;">
+      <div class="section-header" style="margin-bottom:2rem;">
+        <span class="section-kicker">Login</span>
+        <h2>로그인 / 간편가입</h2>
+        <div class="divider"></div>
+        <p>구글 계정으로 1초 만에 로그인하고 은혜앨범·은혜나누기에 글을 남기세요.</p>
+      </div>
+
+      <div id="msg"></div>
+
+      <button class="social-btn" id="googleBtn" style="background:#fff;color:#1f1f1f;border:1px solid var(--color-border);">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+        구글로 시작하기
+      </button>
+
+      <div class="notice" style="margin-top:1rem;">
+        안드로이드 휴대폰은 대부분 이미 구글 계정이 로그인되어 있어 <strong>버튼 한 번</strong>으로 끝납니다.
+        아이폰은 평소 쓰시는 구글(지메일) 계정으로 로그인하시면 됩니다.
+      </div>
+
+      <p class="muted" style="text-align:center;margin-top:2rem;font-size:var(--text-sm);">
+        로그인하면 글쓰기·댓글 작성이 가능합니다.<br>글 읽기는 로그인 없이 누구나 가능합니다.
+      </p>
+    </div>
+  </section>
+  <div id="site-foot"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    document.getElementById('googleBtn').onclick = async () => {
+      try {
+        await googleLogin();
+        location.href = 'share.html';
+      } catch (e) {
+        document.getElementById('msg').innerHTML =
+          `<div class="notice" style="border-color:#c0392b;color:#c0392b;">로그인에 실패했습니다: ${esc(e.message)}</div>`;
+      }
+    };
+    // 리다이렉트 방식으로 돌아온 경우
+    auth.getRedirectResult().then(r => { if (r && r.user) location.href = 'share.html'; }).catch(() => {});
+  </script>
+</body>
+</html>

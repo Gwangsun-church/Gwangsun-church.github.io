@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>교회소식 (주보) — 광선교회</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="site-top"></div>
+  <div class="page-head"><div class="container">
+    <div class="crumbs">홈 · 교회소식</div>
+    <h1>교회소식</h1>
+    <p>매주 주보를 보고 다운로드하실 수 있습니다.</p>
+  </div></div>
+
+  <section class="block"><div class="container">
+    <!-- 관리자 전용 업로드 (관리자 구글계정 로그인 시에만 노출) -->
+    <div id="adminUpload" style="display:none;margin-bottom:2rem;">
+      <h2 style="font-size:var(--text-lg);margin-bottom:1rem;">주보 업로드 <span class="muted" style="font-size:var(--text-sm);font-weight:400;">(관리자 전용)</span></h2>
+      <div class="detail">
+        <div class="field"><label>주일 날짜</label><input type="date" id="bSunday"></div>
+        <div class="field"><label>제목 (비우면 "날짜 주보"로 자동 입력)</label><input type="text" id="bTitle" placeholder="예) 2026년 4월 19일 주보"></div>
+        <div class="field"><label>주보 PDF 파일</label><input type="file" id="bPdf" accept="application/pdf"></div>
+        <button class="btn btn-primary" id="uploadBtn">업로드</button>
+        <div id="upMsg"></div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="muted" id="count"></div>
+    </div>
+
+    <div class="post-list" id="list" style="grid-template-columns:none;"><div class="empty">불러오는 중…</div></div>
+    <div class="pager" id="pager"></div>
+
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="날짜 또는 제목으로 검색 (예: 2026-04 또는 4월)">
+      <button class="btn btn-primary btn-sm" id="searchBtn">검색</button>
+      <button class="btn btn-ghost btn-sm" id="resetBtn">전체보기</button>
+    </div>
+  </div></section>
+
+  <!-- 주보 확대 모달 -->
+  <div class="pdf-back" id="pdfBack"><div class="pdf-wrap">
+    <div class="pdf-bar"><h3 id="pdfTitle">주보</h3>
+      <div style="display:flex;gap:.5rem;"><a class="btn btn-ghost btn-sm" id="pdfDl" target="_blank" rel="noopener">PDF</a><button class="btn btn-primary btn-sm" id="pdfClose">닫기 ✕</button></div></div>
+    <div class="pdf-pages" id="pdfPages"></div>
+  </div></div>
+
+  <div id="site-foot"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    const PER = 10;
+    let all = [], filtered = [], page = 1;
+
+    function openPdf(b) {
+      document.getElementById('pdfTitle').textContent = b.title;
+      document.getElementById('pdfDl').href = b.pdfUrl;
+      document.getElementById('pdfBack').classList.add('on');
+      const urls = [];
+      for (let n = 1; n <= (b.pages || 1); n++) urls.push(pdfPageUrl(b.publicId, n));
+      document.getElementById('pdfPages').innerHTML =
+        urls.map(src => `<img src="${esc(src)}" loading="lazy" alt="주보">`).join('');
+    }
+    document.getElementById('pdfClose').onclick = () => {
+      document.getElementById('pdfBack').classList.remove('on');
+      document.getElementById('pdfPages').innerHTML = '';
+    };
+
+    function render() {
+      const isAdmin = CURRENT_USER && CURRENT_USER.isAdmin;
+      const total = filtered.length;
+      const start = (page - 1) * PER;
+      const rows = filtered.slice(start, start + PER);
+      const listEl = document.getElementById('list');
+      document.getElementById('count').textContent = `총 ${total}개`;
+      if (!total) { listEl.innerHTML = `<div class="empty">등록된 주보가 없습니다.</div>`; document.getElementById('pager').innerHTML = ''; return; }
+      listEl.innerHTML = rows.map((b, i) => {
+        const no = total - (start + i);
+        return `<div class="post-row" data-id="${b.id}" style="cursor:pointer;">
+          <div class="pt"><span class="muted" style="margin-right:.8rem;">${no}</span>📄 ${esc(b.title)}</div>
+          <div class="meta">${esc(b.sunday)}</div>
+          <div class="meta views">${isAdmin ? `<a href="#" data-del="${b.id}" style="color:#c0392b;font-weight:700;">삭제</a>` : '보기 ▸'}</div>
+        </div>`;
+      }).join('');
+      listEl.querySelectorAll('[data-id]').forEach(r => r.onclick = (e) => {
+        if (e.target.dataset.del) return;
+        const b = all.find(x => x.id === r.dataset.id); if (b) openPdf(b);
+      });
+      listEl.querySelectorAll('[data-del]').forEach(a => a.onclick = async (e) => {
+        e.preventDefault(); e.stopPropagation();
+        if (!confirm('주보를 삭제하시겠습니까?')) return;
+        await db.collection('bulletins').doc(a.dataset.del).delete();
+        load();
+      });
+      const pages = Math.ceil(total / PER);
+      let p = `<button ${page <= 1 ? 'disabled' : ''} data-p="${page - 1}">‹</button>`;
+      for (let n = 1; n <= pages; n++) p += `<button class="${n === page ? 'active' : ''}" data-p="${n}">${n}</button>`;
+      p += `<button ${page >= pages ? 'disabled' : ''} data-p="${page + 1}">›</button>`;
+      const pg = document.getElementById('pager'); pg.innerHTML = p;
+      pg.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { page = +b.dataset.p; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    }
+
+    function doSearch() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      filtered = q ? all.filter(b => (b.sunday + ' ' + b.title).toLowerCase().includes(q)) : all.slice();
+      page = 1; render();
+    }
+    document.getElementById('searchBtn').onclick = doSearch;
+    document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+    document.getElementById('resetBtn').onclick = () => { document.getElementById('searchInput').value = ''; filtered = all.slice(); page = 1; render(); };
+
+    async function load() {
+      const snap = await db.collection('bulletins').orderBy('sunday', 'desc').get();
+      all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      filtered = all.slice();
+      render();
+    }
+
+    document.getElementById('uploadBtn').onclick = async () => {
+      const f = document.getElementById('bPdf').files[0];
+      const msg = document.getElementById('upMsg');
+      if (!f) { msg.innerHTML = `<div class="notice" style="border-color:#c0392b;color:#c0392b;margin-top:1rem;">PDF 파일을 선택하세요.</div>`; return; }
+      const btn = document.getElementById('uploadBtn');
+      btn.disabled = true; btn.textContent = '올리는 중…';
+      try {
+        const up = await uploadToCloudinary(f); // PDF → Cloudinary가 쪽수(pages)까지 알려줌
+        const sunday = document.getElementById('bSunday').value || new Date().toISOString().slice(0, 10);
+        const title = (document.getElementById('bTitle').value || `${sunday} 주보`).trim();
+        await db.collection('bulletins').add({
+          title, sunday,
+          publicId: up.public_id,
+          pdfUrl: up.secure_url,
+          pages: up.pages || 1,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        msg.innerHTML = `<div class="notice" style="margin-top:1rem;">✅ 업로드 완료!</div>`;
+        document.getElementById('bPdf').value = ''; document.getElementById('bTitle').value = '';
+        load();
+      } catch (e) {
+        msg.innerHTML = `<div class="notice" style="border-color:#c0392b;color:#c0392b;margin-top:1rem;">${esc(e.message)}</div>`;
+      } finally {
+        btn.disabled = false; btn.textContent = '업로드';
+      }
+    };
+
+    onUserReady(user => {
+      if (user && user.isAdmin) document.getElementById('adminUpload').style.display = 'block';
+      load();
+    });
+  </script>
+</body>
+</html>
