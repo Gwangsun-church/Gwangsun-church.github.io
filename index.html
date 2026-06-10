@@ -120,8 +120,8 @@
         </div>
         <div class="video-grid">
           <div class="video-frame">
-            <iframe id="sermonFrame" src="https://www.youtube.com/embed/videoseries?list=UUYR8zybgk-5pgnD9e8p5_Sg"
-              title="광선교회 설교영상" loading="lazy" allowfullscreen
+            <iframe id="sermonFrame" src="about:blank"
+              title="광선교회 쇼츠 영상" loading="lazy" allowfullscreen
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>
           </div>
           <aside class="video-list">
@@ -201,6 +201,31 @@
       document.getElementById('pdfBack').classList.remove('on');
       document.getElementById('pdfPages').innerHTML = '';
     };
+
+    // 설교영상 틀: 교회 쇼츠를 랜덤으로 재생, 60초마다 다른 쇼츠로 자동 교체
+    // 목록은 3일마다 자동 갱신되는 data/shorts.json 에서 읽음 (실패 시 config.js 예비 목록)
+    (async function () {
+      const frame = document.getElementById('sermonFrame');
+      let list = (YOUTUBE.shorts || []).slice();
+      try {
+        const r = await fetch('data/shorts.json?v=' + Date.now());
+        if (r.ok) {
+          const j = await r.json();
+          if (Array.isArray(j.ids) && j.ids.length) list = j.ids;
+        }
+      } catch (e) { /* 예비 목록 사용 */ }
+      if (!list.length) return;
+      let current = null;
+      function playRandomShort() {
+        let pick;
+        do { pick = list[Math.floor(Math.random() * list.length)]; }
+        while (list.length > 1 && pick === current);
+        current = pick;
+        frame.src = `https://www.youtube.com/embed/${pick}?autoplay=1&mute=1&loop=1&playlist=${pick}&rel=0&playsinline=1`;
+      }
+      playRandomShort();
+      setInterval(playRandomShort, 60000);
+    })();
 
     (async () => {
       try {

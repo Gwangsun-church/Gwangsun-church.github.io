@@ -32,6 +32,13 @@ const YOUTUBE = {
   uploadsPlaylist: "UUYR8zybgk-5pgnD9e8p5_Sg", // 채널 업로드 재생목록
   apiKey: "", // (선택) 넣으면 라이브 자동감지·최신 쇼츠 자동표시
   channelId: "UCYR8zybgk-5pgnD9e8p5_Sg",
+  // 메인 설교영상 틀에서 랜덤으로 돌아가는 쇼츠 목록 (새 쇼츠 추가 시 여기에 ID만 추가)
+  shorts: [
+    "ZT3gesBgRnY", "qhW_8UZ9mtk", "B-lOBbHjBK0", "tW0P9KHG7y8", "QHqZ66_H6aE",
+    "AcFHtXCB-Wk", "q5nhynBnUhU", "qLyHt6zTcSo", "J32A5YDk7Ww", "oI1tMuIQ62A",
+    "l94hh4oKGIA", "IxWxUE5Qlb4", "swrk_bZ_uEc", "qcQpNu5lF44", "wfPYTuTJjU8",
+    "SCAsqmBRXks", "cI3lLdqqVEM", "ikNzb60rQ2I"
+  ],
 };
 
 // 교회 기본 정보
