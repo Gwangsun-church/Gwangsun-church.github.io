@@ -133,7 +133,13 @@ function setupDetail(onChange) {
 }
 
 async function loadPosts(board) {
-  const snap = await db.collection('posts').where('board', '==', board)
-    .orderBy('createdAt', 'desc').limit(100).get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // 복합 색인 없이 동작하도록: 게시판 필터만 서버에서, 정렬은 브라우저에서
+  const snap = await db.collection('posts').where('board', '==', board).limit(300).get();
+  const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  list.sort((a, b) => {
+    const ta = a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0;
+    const tb = b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0;
+    return tb - ta; // 최신순
+  });
+  return list;
 }
