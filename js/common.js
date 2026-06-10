@@ -108,6 +108,17 @@ function renderChrome() {
     if (!href || href === '#') return;
     if (href.split('#')[0] === here && !href.includes('#')) a.classList.add('active');
   });
+
+  // 맨 위로(Top) 버튼 — 모든 페이지 우측 하단 고정
+  const topBtn = document.createElement('button');
+  topBtn.className = 'top-btn';
+  topBtn.setAttribute('aria-label', '맨 위로');
+  topBtn.innerHTML = '↑';
+  document.body.appendChild(topBtn);
+  topBtn.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  const toggleTop = () => topBtn.classList.toggle('show', window.scrollY > 300);
+  window.addEventListener('scroll', toggleTop, { passive: true });
+  toggleTop();
 }
 
 function renderAuthArea() {

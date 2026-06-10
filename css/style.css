@@ -222,6 +222,14 @@ section.block { padding: clamp(3.5rem, 7vw, 6rem) 0; }
 .comment { border-top: 1px solid var(--color-border); padding: 1rem 0; }
 .comment .meta { font-size: var(--text-xs); color: var(--color-text-muted); }
 
+/* 맨 위로(Top) 버튼 */
+.top-btn { position: fixed; right: 18px; bottom: 18px; width: 48px; height: 48px; border-radius: 50%;
+  border: none; background: var(--color-primary); color: #fff; font-size: 1.4rem; font-weight: 700;
+  box-shadow: 0 6px 18px rgba(60,40,15,.3); cursor: pointer; z-index: 45;
+  opacity: 0; visibility: hidden; transform: translateY(8px); transition: all .25s; }
+.top-btn.show { opacity: 1; visibility: visible; transform: translateY(0); }
+.top-btn:hover { background: var(--color-primary-hover); }
+
 .empty { text-align: center; padding: 4rem 1rem; color: var(--color-text-muted); }
 .notice { padding: 0.8rem 1rem; border-radius: var(--radius-md); background: var(--color-surface-2); border: 1px solid var(--color-border); font-size: var(--text-sm); margin-bottom: 1rem; }
 
